@@ -1,0 +1,33 @@
+<!-- index.html -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Email Classification</title>
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+  <div class="container">
+    <h1>Email Classification</h1>
+    <form action="/Classify" method="post">
+      <label for="email-body">Email Body:</label>
+      <textarea name="text" id="email-body" required></textarea>
+      <button type="submit">Classify</button>
+    </form>
+    <div class="result">
+      {% if label %}
+        <label>Classification:</label>
+        <span>{{ label }}</span>
+        <br>
+        <label>Probability of "Not Spam":</label>
+        <span>{{ 'Not Spam' }} : {{ Not_Spam }}%</span>
+        <br>
+        <label>Probability of "Spam":</label>
+        <span>{{ 'Spam' }} : {{ spam }}%</span>
+      {% endif %}
+    </div>
+  </div>        
+</body>
+</html>

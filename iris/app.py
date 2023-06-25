@@ -1,11 +1,17 @@
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI, Depends,Request,Form
 from pydantic import BaseModel
 from typing import List
 from db import SessionLocal, Prediction
 from iris_model import model,iris
+from fastapi.responses import HTMLResponse
+from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
 
 app = FastAPI()
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
+
+templates = Jinja2Templates(directory="templates")
 
 class IrisData(BaseModel):
     sepal_length: float
@@ -25,24 +31,28 @@ def get_db():
     finally:
         db.close()
 
-
+@app.get("/")
+def index(request:Request):
+    
+    return templates.TemplateResponse("index.html",{"request":request,"species":None})
 @app.post("/predict")
-def predict_species(data: IrisData, db=Depends(get_db)):
-    input_data = [[data.sepal_length, data.sepal_width, data.petal_length, data.petal_width]]
+
+async def predict_species(request: Request, sepal_length: float = Form(...), sepal_width: float = Form(...), petal_length: float = Form(...), petal_width: float = Form(...), db=Depends(get_db)):
+    input_data = [[sepal_length, sepal_width, petal_length, petal_width]]
     predictions = model.predict(input_data)
     species = iris.target_names[predictions[0]]
 
     prediction = Prediction(
-        sepal_length=str(data.sepal_length),
-        sepal_width=str(data.sepal_width),
-        petal_length=str(data.petal_length),
-        petal_width=str(data.petal_width),
+        sepal_length=str(sepal_length),
+        sepal_width=str(sepal_width),
+        petal_length=str(petal_length),
+        petal_width=str(petal_width),
         species=species
     )
     db.add(prediction)
     db.commit()
 
-    return {"species": species}
+    return templates.TemplateResponse("index.html", {"request": request, "species": species})
 
 
 @app.get("/predictions", response_model=List[PredictionData])
